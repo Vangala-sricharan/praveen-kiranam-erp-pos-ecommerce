@@ -178,8 +178,9 @@ export const AdminERPView: React.FC = () => {
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const sku = generateSKU(formData.category, formData.brand, `${formData.weight}${formData.unit}`);
-    const barcode = generateBarcode();
+    const primaryVariantId = editingProduct?.weightVariants[0]?.variantId || 'var_1';
+    const sku = editingProduct?.weightVariants[0]?.sku || generateSKU(formData.category, formData.brand, `${formData.weight}${formData.unit}`);
+    const barcode = editingProduct?.weightVariants[0]?.barcode || generateBarcode();
 
     const validImages = formData.images.filter(img => img && img.trim().length > 5);
     const finalImages = validImages.length > 0 
@@ -195,10 +196,10 @@ export const AdminERPView: React.FC = () => {
       description: formData.description,
       hsnCode: formData.hsnCode,
       gstRate: formData.gstRate,
-      selectedVariantId: 'var_1',
+      selectedVariantId: primaryVariantId,
       weightVariants: [
         {
-          variantId: 'var_1',
+          variantId: primaryVariantId,
           weight: formData.weight,
           unit: formData.unit,
           mrp: formData.mrp,
@@ -206,10 +207,12 @@ export const AdminERPView: React.FC = () => {
           stock: formData.stock,
           sku,
           barcode
-        }
+        },
+        ...(editingProduct?.weightVariants ? editingProduct.weightVariants.slice(1) : [])
       ],
       images: finalImages,
-      status: formData.stock > 0 ? 'active' : 'out_of_stock'
+      status: formData.stock > 0 ? 'active' : 'out_of_stock',
+      priceHistory: editingProduct?.priceHistory || []
     };
 
     if (editingProduct) {

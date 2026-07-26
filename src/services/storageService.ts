@@ -78,8 +78,8 @@ class StorageService {
   }
 
   private initializeData() {
-    const existingProds = getLocalItem<Product[]>(STORAGE_KEYS.PRODUCTS, []);
-    if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS) || existingProds.length < 50) {
+    // Only seed initial product catalog if there is NO saved product data in localStorage at all
+    if (localStorage.getItem(STORAGE_KEYS.PRODUCTS) === null) {
       setLocalItem(STORAGE_KEYS.PRODUCTS, ALL_500_PRODUCTS);
     }
     if (!localStorage.getItem(STORAGE_KEYS.CATEGORIES)) {
