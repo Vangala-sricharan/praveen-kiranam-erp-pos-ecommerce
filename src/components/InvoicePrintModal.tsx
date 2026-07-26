@@ -55,7 +55,7 @@ export const InvoicePrintModal: React.FC<InvoicePrintModalProps> = ({ invoice, o
     window.open(url, '_blank');
   };
 
-  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=praveenkiranam@upi&pn=Praveen%20Kiranam&am=${invoice.grandTotal}&cu=INR`)}`;
+  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=8520981574@ybl&pn=${encodeURIComponent('PRAVEEN KIRANAM & GENERAL STORES')}&am=${invoice.grandTotal}&cu=INR`)}`;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">

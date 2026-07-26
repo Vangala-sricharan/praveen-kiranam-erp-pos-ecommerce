@@ -32,6 +32,13 @@ export const AdminERPView: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedPriceHistoryProduct, setSelectedPriceHistoryProduct] = useState<Product | null>(null);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending_verification' | 'verified' | 'rejected'>('all');
+  const [selectedVerificationTime, setSelectedVerificationTime] = useState<import('../types/store').PaymentVerificationTime>(paymentVerificationTime || '30 Seconds');
+
+  React.useEffect(() => {
+    if (paymentVerificationTime) {
+      setSelectedVerificationTime(paymentVerificationTime);
+    }
+  }, [paymentVerificationTime]);
 
   // Bulk Excel Import States
   const [parsedExcelRows, setParsedExcelRows] = useState<any[]>([]);
@@ -886,6 +893,56 @@ export const AdminERPView: React.FC = () => {
       {adminTab === 'payments' && (
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-6">
           
+          {/* Payment Verification Settings Section */}
+          <div className="bg-slate-900 text-white p-5 rounded-2xl border border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div>
+                <h4 className="text-sm font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                  Payment Verification Settings
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Configure estimated verification time displayed on customer payment waiting screens.
+                </p>
+              </div>
+              <div className="bg-slate-800 px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs">
+                <span className="text-slate-400 font-medium">Current Verification Time: </span>
+                <span className="font-black text-emerald-400 font-mono">{paymentVerificationTime || '30 Seconds'}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Select Estimated Verification Duration:
+                </label>
+                <select
+                  value={selectedVerificationTime}
+                  onChange={(e) => setSelectedVerificationTime(e.target.value as import('../types/store').PaymentVerificationTime)}
+                  className="w-full bg-slate-800 text-white border border-slate-700 p-2.5 text-xs rounded-xl font-bold focus:border-amber-400 focus:outline-none cursor-pointer"
+                >
+                  <option value="30 Seconds">30 Seconds (Default)</option>
+                  <option value="1 Minute">1 Minute</option>
+                  <option value="2 Minutes">2 Minutes</option>
+                  <option value="5 Minutes">5 Minutes</option>
+                </select>
+              </div>
+
+              <div className="sm:self-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updatePaymentVerificationTime(selectedVerificationTime);
+                  }}
+                  className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 px-6 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
@@ -1577,7 +1634,7 @@ export const AdminERPView: React.FC = () => {
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Store UPI VPA</label>
-                <input type="text" defaultValue="praveenkiranam@upi" className="w-full bg-slate-50 text-slate-900 border border-slate-300 p-2.5 rounded-xl font-mono text-emerald-800 font-bold" />
+                <input type="text" defaultValue="8520981574@ybl" className="w-full bg-slate-50 text-slate-900 border border-slate-300 p-2.5 rounded-xl font-mono text-emerald-800 font-bold" />
               </div>
             </div>
 

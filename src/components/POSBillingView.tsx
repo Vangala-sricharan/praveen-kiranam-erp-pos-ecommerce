@@ -331,6 +331,46 @@ export const POSBillingView: React.FC = () => {
               </button>
             </div>
 
+            {/* Live POS Dynamic UPI QR Card */}
+            {posPaymentMethod === 'upi' && (
+              <div className="p-3.5 bg-slate-900 text-white rounded-xl border border-slate-800 space-y-3 shadow-md animate-fade-in">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-amber-300">
+                    <QrCode className="w-4 h-4 text-emerald-400" />
+                    <span>POS UPI Payment QR</span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-mono px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
+                    Exact Amount ₹
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="bg-white p-1 rounded-xl shrink-0 border border-slate-200">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`upi://pay?pa=8520981574@ybl&pn=${encodeURIComponent('PRAVEEN KIRANAM & GENERAL STORES')}&am=${grandTotal}&cu=INR&tn=${encodeURIComponent('POS Bill Sale')}`)}`}
+                      alt="POS UPI QR"
+                      className="w-24 h-24 object-contain"
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-[11px] font-mono min-w-0 flex-1">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Merchant Name</span>
+                      <span className="font-bold text-white text-[11px] truncate block">PRAVEEN KIRANAM & GENERAL STORES</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">UPI ID</span>
+                      <span className="font-bold text-emerald-400 text-xs font-mono">8520981574@ybl</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Pay Amount</span>
+                      <span className="font-black text-amber-300 text-sm font-mono">{formatINR(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quick Cash Tendered Buttons if Cash */}
             {posPaymentMethod === 'cash' && (
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
