@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@layer base {
+  input,
+  textarea,
+  select {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    caret-color: #059669 !important;
+    border-color: #d1d5db;
+  }
+
+  /* Specific input types override */
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="date"],
+  textarea,
+  select {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    caret-color: #059669 !important;
+    border-color: #d1d5db;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #6b7280 !important;
+    opacity: 1 !important;
+  }
+
+  /* Webkit Autofill fix for clear dark text on white background */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #111827 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: #059669 !important;
+  }
+
+  /* Focus states */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #10b981 !important;
+    outline: none !important;
+  }
+}
