@@ -174,6 +174,11 @@ interface StoreContextType {
     paymentMethod: PaymentMethod;
     notes?: string;
   }) => Order | null;
+
+  // Quick Price Edit & Payment Verification Time
+  quickEditPrice: (productId: string, variantId: string, newSellingPrice: number, newMrp?: number) => void;
+  paymentVerificationTime: import('../types/store').PaymentVerificationTime;
+  updatePaymentVerificationTime: (time: import('../types/store').PaymentVerificationTime) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -626,6 +631,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     refreshData();
   };
 
+  // Payment Verification Time State
+  const [paymentVerificationTime, setPaymentVerificationTimeState] = useState<import('../types/store').PaymentVerificationTime>(() => storageService.getPaymentVerificationTime());
+
+  const updatePaymentVerificationTime = (time: import('../types/store').PaymentVerificationTime) => {
+    storageService.savePaymentVerificationTime(time);
+    setPaymentVerificationTimeState(time);
+    showToast(`Payment verification time updated to ${time}`, 'success');
+  };
+
+  const quickEditPrice = (productId: string, variantId: string, newSellingPrice: number, newMrp?: number) => {
+    storageService.quickEditPrice(productId, variantId, newSellingPrice, newMrp);
+    showToast(`Price updated live to ₹${newSellingPrice}`, 'success');
+    refreshData();
+  };
+
   const updateProduct = (p: Product) => {
     storageService.updateProduct(p);
     showToast('Product updated successfully', 'success');
@@ -825,7 +845,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addSavedAddress, deleteSavedAddress,
       addStockAdjustment, createPurchaseOrder, receivePurchaseOrder,
       addReview, markNotificationRead,
-      updateOrderStatus, approvePayment, rejectPayment, placeOnlineOrder
+      updateOrderStatus, approvePayment, rejectPayment, placeOnlineOrder,
+      quickEditPrice, paymentVerificationTime, updatePaymentVerificationTime
     }}>
       {children}
     </StoreContext.Provider>

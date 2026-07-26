@@ -22,13 +22,15 @@ export const AdminERPView: React.FC = () => {
     addProduct, updateProduct, deleteProduct, duplicateProduct,
     addExpense, addSupplier, addCustomer, updateOrderStatus,
     approvePayment, rejectPayment,
-    setActiveInvoice
+    setActiveInvoice,
+    quickEditPrice, paymentVerificationTime, updatePaymentVerificationTime
   } = useStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [productPage, setProductPage] = useState(1);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedPriceHistoryProduct, setSelectedPriceHistoryProduct] = useState<Product | null>(null);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending_verification' | 'verified' | 'rejected'>('all');
 
   // Bulk Excel Import States
@@ -559,8 +561,8 @@ export const AdminERPView: React.FC = () => {
                     <th className="py-2.5 px-3">Brand</th>
                     <th className="py-2.5 px-3">Weight</th>
                     <th className="py-2.5 px-3">SKU / Barcode</th>
-                    <th className="py-2.5 px-3">MRP</th>
-                    <th className="py-2.5 px-3">Selling Price</th>
+                    <th className="py-2.5 px-3">MRP (₹)</th>
+                    <th className="py-2.5 px-3">Selling Price (₹) [Quick Edit]</th>
                     <th className="py-2.5 px-3">Stock</th>
                     <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
@@ -591,8 +593,42 @@ export const AdminERPView: React.FC = () => {
                           <div>{v?.sku}</div>
                           <div className="text-[9px] text-slate-400">{v?.barcode}</div>
                         </td>
-                        <td className="py-2.5 px-3 font-mono line-through text-slate-400">{formatINR(v?.mrp || 0)}</td>
-                        <td className="py-2.5 px-3 font-mono font-black text-emerald-900">{formatINR(v?.sellingPrice || 0)}</td>
+                        <td className="py-2.5 px-3 font-mono">
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-[10px] text-slate-400">₹</span>
+                            <input
+                              type="number"
+                              key={`mrp_${p.id}_${v?.mrp}`}
+                              defaultValue={v?.mrp || 0}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (val >= 0 && val !== v?.mrp) {
+                                  quickEditPrice(p.id, v?.variantId || '', v?.sellingPrice || 0, val);
+                                }
+                              }}
+                              className="w-16 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-xs font-mono text-slate-500 line-through focus:border-emerald-500 focus:outline-none"
+                              title="Click to quick-edit MRP"
+                            />
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-black text-emerald-900">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-emerald-800 font-bold">₹</span>
+                            <input
+                              type="number"
+                              key={`sp_${p.id}_${v?.sellingPrice}`}
+                              defaultValue={v?.sellingPrice || 0}
+                              onBlur={(e) => {
+                                const val = Number(e.target.value);
+                                if (val > 0 && val !== v?.sellingPrice) {
+                                  quickEditPrice(p.id, v?.variantId || '', val, v?.mrp);
+                                }
+                              }}
+                              className="w-20 bg-emerald-50/80 border border-emerald-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 rounded-md px-2 py-1 text-xs font-mono font-black text-emerald-900 focus:outline-none transition shadow-2xs"
+                              title="Instant live price update"
+                            />
+                          </div>
+                        </td>
                         <td className="py-2.5 px-3 font-bold">
                           <span className={`px-2 py-0.5 rounded text-[10px] ${
                             (v?.stock || 0) <= 5 ? 'bg-rose-100 text-rose-800 font-black' : 'bg-emerald-100 text-emerald-900'
@@ -600,7 +636,19 @@ export const AdminERPView: React.FC = () => {
                             {v?.stock || 0} left
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right space-x-1.5">
+                        <td className="py-2.5 px-3 text-right space-x-1">
+                          <button
+                            onClick={() => setSelectedPriceHistoryProduct(p)}
+                            title="View Price History"
+                            className="p-1 text-sky-700 hover:bg-sky-50 rounded inline-flex items-center gap-0.5"
+                          >
+                            <Clock className="w-4 h-4" />
+                            {p.priceHistory && p.priceHistory.length > 0 && (
+                              <span className="text-[9px] font-bold bg-sky-100 text-sky-800 px-1 rounded-full">
+                                {p.priceHistory.length}
+                              </span>
+                            )}
+                          </button>
                           <button
                             onClick={() => duplicateProduct(p.id)}
                             title="Duplicate Product"
@@ -1652,6 +1700,164 @@ export const AdminERPView: React.FC = () => {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: STORE SETTINGS & PAYMENT CONFIGURATION */}
+      {adminTab === 'settings' && (
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-6">
+          <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+            <div>
+              <h3 className="text-base font-black text-slate-900">Store Settings & Payment Controls</h3>
+              <p className="text-xs text-slate-500">Configure business identity, location, UPI payment options, and payment verification SLA.</p>
+            </div>
+            <span className="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
+              🟢 Live Store Config
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 1. Payment Verification Settings */}
+            <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl border border-slate-700 shadow-lg space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-black">
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white">Payment Verification Time (SLA)</h4>
+                  <p className="text-[11px] text-slate-400">Time shown to customer on the Waiting for Verification screen</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-2">Select Estimated Verification SLA *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['30 Seconds', '1 Minute', '2 Minutes', '5 Minutes'] as const).map(timeOpt => (
+                    <button
+                      key={timeOpt}
+                      type="button"
+                      onClick={() => updatePaymentVerificationTime(timeOpt)}
+                      className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between transition ${
+                        paymentVerificationTime === timeOpt
+                          ? 'bg-emerald-600 text-white border-emerald-400 ring-2 ring-emerald-400'
+                          : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700'
+                      }`}
+                    >
+                      <span>{timeOpt}</span>
+                      {paymentVerificationTime === timeOpt && <Check className="w-4 h-4 text-white" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-800/90 rounded-xl border border-slate-700 text-[11px] text-slate-300 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Currently active SLA: <strong className="text-amber-300">{paymentVerificationTime}</strong></span>
+              </div>
+            </div>
+
+            {/* 2. Smart UPI Payment System Configuration */}
+            <div className="p-5 bg-emerald-950 text-white rounded-2xl border border-emerald-800 shadow-lg space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black">
+                  <QrCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-amber-300">Smart UPI Receiver Configuration</h4>
+                  <p className="text-[11px] text-emerald-200">Dynamic QR Generator Details</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3 bg-emerald-900/60 rounded-xl border border-emerald-800 flex justify-between items-center">
+                  <span className="text-emerald-200 font-bold">UPI VPA ID:</span>
+                  <span className="font-mono font-black text-amber-300 text-sm">8520981574@ybl</span>
+                </div>
+
+                <div className="p-3 bg-emerald-900/60 rounded-xl border border-emerald-800 flex justify-between items-center">
+                  <span className="text-emerald-200 font-bold">Merchant Name:</span>
+                  <span className="font-bold text-white text-xs">PRAVEEN KIRANAM & GENERAL STORES</span>
+                </div>
+
+                <div className="p-3 bg-emerald-900/60 rounded-xl border border-emerald-800 flex justify-between items-center">
+                  <span className="text-emerald-200 font-bold">Store Heritage Badge:</span>
+                  <span className="font-bold text-emerald-300 text-xs">🟢 Serving Manakondur Since 2001</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Business Location & Identity */}
+            <div className="md:col-span-2 p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Business Details & Store Address</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-white rounded-xl border border-slate-200">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase">Business Name</div>
+                  <div className="font-black text-slate-900 mt-0.5">PRAVEEN KIRANAM & GENERAL STORES</div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase">Store Address</div>
+                  <div className="font-bold text-slate-800 mt-0.5">Manakondur, Karimnagar, Telangana - 505469</div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-slate-200">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase">GSTIN / FSSAI</div>
+                  <div className="font-mono font-bold text-slate-800 mt-0.5">36ABCDE1234F1Z5 / 13621011000123</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRICE HISTORY MODAL */}
+      {selectedPriceHistoryProduct && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100 my-8 space-y-4">
+            <button
+              onClick={() => setSelectedPriceHistoryProduct(null)}
+              className="absolute top-4 right-4 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center font-black shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900">{selectedPriceHistoryProduct.name}</h3>
+                <p className="text-[11px] text-slate-500">Price Change History & Audit Logs</p>
+              </div>
+            </div>
+
+            {(!selectedPriceHistoryProduct.priceHistory || selectedPriceHistoryProduct.priceHistory.length === 0) ? (
+              <div className="text-center py-6 text-slate-400 text-xs">
+                No price updates recorded for this product yet.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {selectedPriceHistoryProduct.priceHistory.map((rec, idx) => (
+                  <div key={rec.id || idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs">
+                    <div className="flex justify-between items-center font-bold">
+                      <span className="text-rose-600 line-through">₹{rec.previousPrice}</span>
+                      <span className="text-slate-400">➔</span>
+                      <span className="text-emerald-800 font-mono font-black text-sm">₹{rec.newPrice}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                      <span>Updated By: <strong>{rec.updatedBy}</strong></span>
+                      <span className="font-mono">{formatDate(rec.updatedAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => setSelectedPriceHistoryProduct(null)}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition"
+            >
+              Close History
+            </button>
           </div>
         </div>
       )}

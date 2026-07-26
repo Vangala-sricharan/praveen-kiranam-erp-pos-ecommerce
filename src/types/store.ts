@@ -17,6 +17,18 @@ export interface WeightVariant {
 
 export type GSTPercentage = 0 | 5 | 12 | 18 | 28;
 
+export interface PriceHistoryRecord {
+  id: string;
+  previousPrice: number;
+  newPrice: number;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export type SpecialBadge = 'Best Seller' | 'Popular' | 'Limited Offer' | 'Hot Deal' | 'New Arrival' | "Today's Special";
+
+export type PaymentVerificationTime = '30 Seconds' | '1 Minute' | '2 Minutes' | '5 Minutes';
+
 export interface Product {
   id: string;
   name: string;
@@ -42,6 +54,12 @@ export interface Product {
   status: 'active' | 'low_stock' | 'out_of_stock' | 'discontinued';
   rating?: number;
   reviewsCount?: number;
+  manufacturer?: string;
+  countryOfOrigin?: string;
+  packSize?: string;
+  specialBadge?: SpecialBadge;
+  reorderLevel?: number;
+  priceHistory?: PriceHistoryRecord[];
 }
 
 export interface Category {

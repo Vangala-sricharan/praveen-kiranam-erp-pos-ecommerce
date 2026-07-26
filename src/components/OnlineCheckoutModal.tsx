@@ -20,7 +20,7 @@ interface OnlineCheckoutModalProps {
 export const OnlineCheckoutModal: React.FC<OnlineCheckoutModalProps> = ({ isOpen, onClose }) => {
   const { 
     cartSubtotal, cartGstTotal, cartGrandTotal, cartDeliveryFee, couponDiscount, 
-    placeOnlineOrder, setIsCustomerProfileOpen 
+    placeOnlineOrder, setIsCustomerProfileOpen, paymentVerificationTime 
   } = useStore();
 
   const [name, setName] = useState('');
@@ -193,7 +193,7 @@ export const OnlineCheckoutModal: React.FC<OnlineCheckoutModalProps> = ({ isOpen
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-400 font-medium">Estimated Verification Time:</span>
                 <span className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" /> 2 Minutes
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> {paymentVerificationTime || '2 Minutes'}
                 </span>
               </div>
             </div>

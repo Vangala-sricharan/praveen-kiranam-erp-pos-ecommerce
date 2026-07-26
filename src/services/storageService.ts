@@ -198,9 +198,69 @@ class StorageService {
     const products = this.getProducts();
     const index = products.findIndex(p => p.id === updatedProduct.id);
     if (index !== -1) {
+      const existing = products[index];
+      const oldVariant = existing.weightVariants[0];
+      const newVariant = updatedProduct.weightVariants[0];
+
+      if (oldVariant && newVariant && oldVariant.sellingPrice !== newVariant.sellingPrice) {
+        const historyRecord = {
+          id: `ph_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          previousPrice: oldVariant.sellingPrice,
+          newPrice: newVariant.sellingPrice,
+          updatedAt: new Date().toISOString(),
+          updatedBy: 'Admin ERP'
+        };
+        updatedProduct.priceHistory = [historyRecord, ...(existing.priceHistory || [])];
+      }
+
+      const primaryStock = newVariant ? newVariant.stock : 0;
+      const reorderLvl = updatedProduct.reorderLevel || 5;
+      if (primaryStock <= 0) {
+        updatedProduct.status = 'out_of_stock';
+      } else if (primaryStock <= reorderLvl) {
+        updatedProduct.status = 'low_stock';
+      } else if (updatedProduct.status === 'out_of_stock' || updatedProduct.status === 'low_stock') {
+        updatedProduct.status = 'active';
+      }
+
       products[index] = updatedProduct;
       this.saveProducts(products);
     }
+  }
+
+  quickEditPrice(productId: string, variantId: string, newSellingPrice: number, newMrp?: number): void {
+    const products = this.getProducts();
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const variant = product.weightVariants.find(v => v.variantId === variantId) || product.weightVariants[0];
+    if (!variant) return;
+
+    const oldSellingPrice = variant.sellingPrice;
+    if (oldSellingPrice !== newSellingPrice || (newMrp !== undefined && variant.mrp !== newMrp)) {
+      variant.sellingPrice = newSellingPrice;
+      if (newMrp !== undefined && newMrp > 0) {
+        variant.mrp = newMrp;
+      }
+
+      const historyRecord = {
+        id: `ph_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        previousPrice: oldSellingPrice,
+        newPrice: newSellingPrice,
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'Quick Edit'
+      };
+      product.priceHistory = [historyRecord, ...(product.priceHistory || [])];
+      this.saveProducts(products);
+    }
+  }
+
+  getPaymentVerificationTime(): import('../types/store').PaymentVerificationTime {
+    return getLocalItem('praveen_kiranam_payment_ver_time', '30 Seconds' as import('../types/store').PaymentVerificationTime);
+  }
+
+  savePaymentVerificationTime(time: import('../types/store').PaymentVerificationTime): void {
+    setLocalItem('praveen_kiranam_payment_ver_time', time);
   }
 
   deleteProduct(productId: string): void {
