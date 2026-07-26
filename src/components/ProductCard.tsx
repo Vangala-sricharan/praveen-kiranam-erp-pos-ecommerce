@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Product, WeightVariant } from '../types/store';
 import { useStore } from '../context/StoreContext';
 import { formatINR } from '../utils/formatters';
+import { getValidProductImage, handleImageError } from '../utils/imageUtils';
 import { Plus, Minus, Heart, Eye, Check, ShoppingCart, Sparkles } from 'lucide-react';
 
 interface ProductCardProps {
@@ -71,9 +72,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
 
         {/* Product Image */}
         <img
-          src={product.images[0]}
+          src={getValidProductImage(product.images[0], product.category)}
           alt={product.name}
           referrerPolicy="no-referrer"
+          onError={(e) => handleImageError(e, product.category)}
           onClick={() => onOpenDetail(product)}
           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 cursor-pointer"
         />

@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { formatINR } from '../utils/formatters';
+import { getValidProductImage, handleImageError } from '../utils/imageUtils';
 import { X, ShoppingBag, Plus, Minus, Trash2, Tag, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 
 interface CartDrawerProps {
@@ -105,9 +106,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onProce
                   className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center gap-3"
                 >
                   <img
-                    src={item.image}
+                    src={getValidProductImage(item.image)}
                     alt={item.productName}
                     referrerPolicy="no-referrer"
+                    onError={handleImageError}
                     className="w-14 h-14 object-contain rounded-lg bg-white p-1 border border-slate-200 shrink-0"
                   />
 

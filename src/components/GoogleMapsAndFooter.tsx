@@ -15,7 +15,7 @@ export const GoogleMapsAndFooter: React.FC = () => {
           <div className="lg:col-span-5 space-y-4">
             <div className="inline-flex items-center gap-2 bg-emerald-900/80 border border-emerald-700 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full">
               <MapPin className="w-3.5 h-3.5" />
-              <span>VISIT OUR PHYSICAL SUPERMARKET</span>
+              <span>🟢 Serving Manakondur Since 2001</span>
             </div>
 
             <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
@@ -23,7 +23,11 @@ export const GoogleMapsAndFooter: React.FC = () => {
             </h3>
 
             <p className="text-xs text-slate-300 leading-relaxed font-normal">
-              {STORE_DETAILS.address}
+              📍 Manakondur, Karimnagar, Telangana - 505469, India
+            </p>
+
+            <p className="text-xs text-emerald-300 font-medium">
+              Serving the local community with quality groceries, household essentials and daily needs.
             </p>
 
             <div className="space-y-2 text-xs text-slate-300 font-medium">
@@ -43,7 +47,7 @@ export const GoogleMapsAndFooter: React.FC = () => {
 
             <div className="pt-2 flex flex-wrap gap-3">
               <a
-                href={STORE_DETAILS.googleMapsUrl}
+                href="https://www.google.com/maps/search/?api=1&query=18.397500,79.187528"
                 target="_blank"
                 rel="noreferrer"
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2"
@@ -65,13 +69,13 @@ export const GoogleMapsAndFooter: React.FC = () => {
           {/* Right Embedded Map */}
           <div className="lg:col-span-7 h-64 md:h-80 rounded-2xl overflow-hidden border border-slate-700 shadow-inner bg-slate-800">
             <iframe
-              title="Praveen Kiranam Location Map"
+              title="Praveen Kiranam Location Map - Manakondur"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               loading="lazy"
               allowFullScreen
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15222.753896288!2d78.3750!3d17.5180!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb91c305886d2b%3A0xe1c7694f4c2c10b0!2sPragathi%20Nagar%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+              src="https://maps.google.com/maps?q=18.397500,79.187528&z=16&output=embed"
             ></iframe>
           </div>
         </div>
@@ -79,7 +83,9 @@ export const GoogleMapsAndFooter: React.FC = () => {
         {/* Footer Badges & Copyright */}
         <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-medium">
           <div>
-            © 2026 {STORE_DETAILS.name}. All rights reserved.
+            <div className="font-bold text-slate-200">{STORE_DETAILS.name}</div>
+            <div className="text-[11px] text-slate-400">Serving Manakondur Since 2001</div>
+            <div className="text-[11px] text-slate-500">📍 Manakondur, Karimnagar, Telangana - 505469 India</div>
           </div>
 
           <div className="flex items-center gap-4 text-emerald-400 font-mono text-[11px]">
@@ -91,7 +97,7 @@ export const GoogleMapsAndFooter: React.FC = () => {
           <div className="flex items-center gap-1 text-slate-400">
             <span>Built with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-            <span>for Hyderabad's Kiranam Stores</span>
+            <span>for Manakondur & Karimnagar</span>
           </div>
         </div>
       </div>

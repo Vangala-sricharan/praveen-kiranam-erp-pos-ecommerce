@@ -4,12 +4,14 @@
 import React, { useState } from 'react';
 import { useStore, AdminTab } from '../context/StoreContext';
 import { formatINR, formatDate, generateSKU, generateBarcode } from '../utils/formatters';
+import { getValidProductImage, handleImageError, CATEGORY_FALLBACK_IMAGES } from '../utils/imageUtils';
 import { Product, WeightVariant, Supplier, Expense, Customer, Order, GSTPercentage } from '../types/store';
 import { 
   LayoutDashboard, Package, FileSpreadsheet, ShoppingBag, 
   Truck, Banknote, BookOpen, FileText, Plus, Edit3, Trash2, 
   Search, Download, Upload, AlertTriangle, CheckCircle2, DollarSign, 
-  TrendingUp, Users, ArrowUpRight, ArrowDownRight, ShieldCheck, Barcode, Printer, X 
+  TrendingUp, Users, ArrowUpRight, ArrowDownRight, ShieldCheck, Barcode, Printer, X,
+  QrCode, MessageCircle, Clock, Check, XCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -19,6 +21,7 @@ export const AdminERPView: React.FC = () => {
     stats, products, categories, suppliers, customers, orders, expenses,
     addProduct, updateProduct, deleteProduct, duplicateProduct,
     addExpense, addSupplier, addCustomer, updateOrderStatus,
+    approvePayment, rejectPayment,
     setActiveInvoice
   } = useStore();
 
@@ -26,6 +29,7 @@ export const AdminERPView: React.FC = () => {
   const [productPage, setProductPage] = useState(1);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending_verification' | 'verified' | 'rejected'>('all');
 
   // Bulk Excel Import States
   const [parsedExcelRows, setParsedExcelRows] = useState<any[]>([]);
@@ -54,7 +58,8 @@ export const AdminERPView: React.FC = () => {
     weight: 1,
     unit: 'kg' as WeightVariant['unit'],
     stock: 50,
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80'
+    images: ['https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80'] as string[],
+    newImageUrlInput: ''
   });
 
   // Handle Excel File Upload for Bulk Product Catalog
@@ -174,6 +179,11 @@ export const AdminERPView: React.FC = () => {
     const sku = generateSKU(formData.category, formData.brand, `${formData.weight}${formData.unit}`);
     const barcode = generateBarcode();
 
+    const validImages = formData.images.filter(img => img && img.trim().length > 5);
+    const finalImages = validImages.length > 0 
+      ? validImages 
+      : [getValidProductImage(null, formData.category)];
+
     const newProd: Product = {
       id: editingProduct ? editingProduct.id : `prod_${Date.now()}`,
       name: formData.name,
@@ -196,7 +206,7 @@ export const AdminERPView: React.FC = () => {
           barcode
         }
       ],
-      images: [formData.image],
+      images: finalImages,
       status: formData.stock > 0 ? 'active' : 'out_of_stock'
     };
 
@@ -272,6 +282,7 @@ export const AdminERPView: React.FC = () => {
             { id: 'categories', label: 'Categories', icon: BookOpen },
             { id: 'brands', label: 'Brands Catalog', icon: ShieldCheck },
             { id: 'orders', label: 'Order Management', icon: ShoppingBag },
+            { id: 'payments', label: 'Payments Management', icon: QrCode },
             { id: 'customers', label: 'Customers CRM', icon: Users },
             { id: 'khata', label: 'Khata Book', icon: BookOpen },
             { id: 'suppliers', label: 'Suppliers Directory', icon: Truck },
@@ -560,8 +571,18 @@ export const AdminERPView: React.FC = () => {
                     return (
                       <tr key={p.id} className="hover:bg-slate-50">
                         <td className="py-2.5 px-3">
-                          <div className="font-bold text-slate-900">{p.name}</div>
-                          <div className="text-[10px] text-emerald-800 font-bold">{p.teluguName}</div>
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={getValidProductImage(p.images[0], p.category)} 
+                              alt={p.name} 
+                              onError={(e) => handleImageError(e, p.category)}
+                              className="w-9 h-9 object-contain rounded-lg bg-slate-50 border border-slate-200 p-0.5 shrink-0"
+                            />
+                            <div>
+                              <div className="font-bold text-slate-900">{p.name}</div>
+                              <div className="text-[10px] text-emerald-800 font-bold">{p.teluguName}</div>
+                            </div>
+                          </div>
                         </td>
                         <td className="py-2.5 px-3">{p.category}</td>
                         <td className="py-2.5 px-3 font-semibold text-slate-700">{p.brand}</td>
@@ -603,7 +624,8 @@ export const AdminERPView: React.FC = () => {
                                 weight: v.weight,
                                 unit: v.unit,
                                 stock: v.stock,
-                                image: p.images[0] || ''
+                                images: p.images && p.images.length > 0 ? [...p.images] : [getValidProductImage(null, p.category)],
+                                newImageUrlInput: ''
                               });
                               setIsAddProductModalOpen(true);
                             }}
@@ -806,6 +828,279 @@ export const AdminERPView: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* TAB 5: SUPPLIERS & PO */}
+      {adminTab === 'payments' && (
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-6">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-emerald-700" />
+                Smart UPI & Order Payments Management
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Verify customer UPI payment submissions, approve orders, and auto-sync ERP invoices.
+              </p>
+            </div>
+
+            {/* Quick Metrics Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="px-3 py-2 bg-amber-50 rounded-2xl border border-amber-200 text-center">
+                <div className="text-[10px] text-amber-800 font-bold uppercase">Pending Verification</div>
+                <div className="text-sm font-black text-amber-900">
+                  {orders.filter(o => o.paymentStatus === 'pending_verification').length} Orders
+                </div>
+              </div>
+
+              <div className="px-3 py-2 bg-emerald-50 rounded-2xl border border-emerald-200 text-center">
+                <div className="text-[10px] text-emerald-800 font-bold uppercase">Verified UPI Revenue</div>
+                <div className="text-sm font-black text-emerald-950 font-mono">
+                  {formatINR(orders.filter(o => o.paymentStatus === 'verified' || (o.paymentMethod === 'upi' && o.paymentStatus === 'paid')).reduce((s, o) => s + o.grandTotal, 0))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto text-xs font-bold">
+            <button
+              onClick={() => setPaymentFilter('all')}
+              className={`px-4 py-2 rounded-xl transition ${
+                paymentFilter === 'all'
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              All Payments ({orders.length})
+            </button>
+
+            <button
+              onClick={() => setPaymentFilter('pending_verification')}
+              className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                paymentFilter === 'pending_verification'
+                  ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                  : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              Pending Verification ({orders.filter(o => o.paymentStatus === 'pending_verification').length})
+            </button>
+
+            <button
+              onClick={() => setPaymentFilter('verified')}
+              className={`px-4 py-2 rounded-xl transition ${
+                paymentFilter === 'verified'
+                  ? 'bg-emerald-800 text-white shadow-md'
+                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              Verified ({orders.filter(o => o.paymentStatus === 'verified' || o.paymentStatus === 'paid').length})
+            </button>
+
+            <button
+              onClick={() => setPaymentFilter('rejected')}
+              className={`px-4 py-2 rounded-xl transition ${
+                paymentFilter === 'rejected'
+                  ? 'bg-rose-700 text-white shadow-md'
+                  : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
+              }`}
+            >
+              Rejected ({orders.filter(o => o.paymentStatus === 'rejected' || o.orderStatus === 'payment_rejected').length})
+            </button>
+          </div>
+
+          {/* Payments Table / Cards */}
+          {(() => {
+            const filteredOrders = orders.filter(o => {
+              if (paymentFilter === 'pending_verification') return o.paymentStatus === 'pending_verification';
+              if (paymentFilter === 'verified') return o.paymentStatus === 'verified' || o.paymentStatus === 'paid';
+              if (paymentFilter === 'rejected') return o.paymentStatus === 'rejected' || o.orderStatus === 'payment_rejected';
+              return true;
+            });
+
+            if (filteredOrders.length === 0) {
+              return (
+                <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <QrCode className="w-10 h-10 text-slate-400 mx-auto" />
+                  <p className="text-sm font-bold text-slate-700">No payment records found for this filter.</p>
+                  <p className="text-xs text-slate-500">Orders placed by customers will automatically appear here for verification.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-xs">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-900 text-white font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">Order Ref & Date</th>
+                      <th className="p-3">Customer Details</th>
+                      <th className="p-3">Method</th>
+                      <th className="p-3 text-right">Amount</th>
+                      <th className="p-3">Payment Status</th>
+                      <th className="p-3 text-center">ERP Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    {filteredOrders.map((ord) => {
+                      const isPendingVer = ord.paymentStatus === 'pending_verification';
+                      const isVerified = ord.paymentStatus === 'verified' || ord.paymentStatus === 'paid';
+                      const isRejected = ord.paymentStatus === 'rejected' || ord.orderStatus === 'payment_rejected';
+
+                      return (
+                        <tr key={ord.id} className={`hover:bg-slate-50/80 transition ${isPendingVer ? 'bg-amber-50/40' : ''}`}>
+                          
+                          {/* Order Ref & Date */}
+                          <td className="p-3">
+                            <div className="font-bold text-slate-900 font-mono text-sm">#{ord.orderNumber}</div>
+                            <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              {formatDate(ord.orderDate)}
+                            </div>
+                          </td>
+
+                          {/* Customer Details */}
+                          <td className="p-3">
+                            <div className="font-bold text-slate-900">{ord.customerName}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-slate-600 font-mono text-[11px]">{ord.customerPhone}</span>
+                              <a
+                                href={`https://wa.me/91${ord.customerPhone}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-md transition"
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </td>
+
+                          {/* Method */}
+                          <td className="p-3">
+                            {ord.paymentMethod === 'upi' ? (
+                              <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-900 border border-purple-200 text-[11px] font-bold px-2.5 py-1 rounded-xl">
+                                <QrCode className="w-3.5 h-3.5 text-purple-700" />
+                                UPI Instant
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 border border-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-xl">
+                                Cash On Delivery
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Amount */}
+                          <td className="p-3 text-right">
+                            <div className="font-black text-sm text-slate-900 font-mono">
+                              {formatINR(ord.grandTotal)}
+                            </div>
+                            <div className="text-[10px] text-slate-500">{ord.items.length} items</div>
+                          </td>
+
+                          {/* Payment Status Badge */}
+                          <td className="p-3">
+                            {isPendingVer && (
+                              <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                Pending Verification
+                              </span>
+                            )}
+
+                            {isVerified && (
+                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 text-[11px] font-bold px-3 py-1 rounded-full">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                Verified & Approved
+                              </span>
+                            )}
+
+                            {isRejected && (
+                              <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-900 border border-rose-300 text-[11px] font-bold px-3 py-1 rounded-full">
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                Payment Rejected
+                              </span>
+                            )}
+
+                            {!isPendingVer && !isVerified && !isRejected && (
+                              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 text-[11px] font-bold px-3 py-1 rounded-full">
+                                Pending COD
+                              </span>
+                            )}
+                          </td>
+
+                          {/* ERP Actions */}
+                          <td className="p-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              
+                              {/* Approve Button */}
+                              {isPendingVer && (
+                                <button
+                                  onClick={() => approvePayment(ord.id)}
+                                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition active:scale-95"
+                                  title="Approve Payment & Start Preparing"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Approve</span>
+                                </button>
+                              )}
+
+                              {/* Reject Button */}
+                              {isPendingVer && (
+                                <button
+                                  onClick={() => rejectPayment(ord.id)}
+                                  className="bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-bold text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 transition active:scale-95"
+                                  title="Reject Payment"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>Reject</span>
+                                </button>
+                              )}
+
+                              {/* Print Invoice */}
+                              <button
+                                onClick={() => {
+                                  const inv = {
+                                    invoiceNumber: ord.invoiceNumber || `INV-${ord.orderNumber}`,
+                                    orderId: ord.id,
+                                    orderNumber: ord.orderNumber,
+                                    orderDate: ord.orderDate,
+                                    customerName: ord.customerName,
+                                    customerPhone: ord.customerPhone,
+                                    customerAddress: ord.customerAddress,
+                                    items: ord.items,
+                                    subtotal: ord.subtotal,
+                                    cgstTotal: ord.cgstTotal,
+                                    sgstTotal: ord.sgstTotal,
+                                    deliveryFee: ord.deliveryFee,
+                                    discountAmount: ord.discountAmount,
+                                    grandTotal: ord.grandTotal,
+                                    paymentMethod: ord.paymentMethod,
+                                    paymentStatus: ord.paymentStatus
+                                  };
+                                  setActiveInvoice(inv);
+                                }}
+                                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition border border-slate-300"
+                                title="Print / Download Official GST Invoice"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </button>
+
+                            </div>
+                          </td>
+
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+
         </div>
       )}
 
@@ -1479,9 +1774,152 @@ export const AdminERPView: React.FC = () => {
                 </div>
               </div>
 
+              {/* Product Image Management */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                    <span>Product Imagery ({formData.images.length} Images)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const categoryFallback = CATEGORY_FALLBACK_IMAGES[formData.category] || getValidProductImage(null, formData.category);
+                      setFormData(prev => ({
+                        ...prev,
+                        images: [...prev.images, categoryFallback]
+                      }));
+                    }}
+                    className="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold underline"
+                  >
+                    + Add Category Default
+                  </button>
+                </div>
+
+                {/* Previews Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {formData.images.map((imgUrl, index) => (
+                    <div key={index} className="relative bg-white rounded-xl border border-slate-200 p-1.5 group shadow-2xs flex flex-col justify-between">
+                      <div className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
+                        <img
+                          src={getValidProductImage(imgUrl, formData.category)}
+                          alt={`Preview ${index + 1}`}
+                          onError={(e) => handleImageError(e, formData.category)}
+                          className="w-full h-full object-contain"
+                        />
+                        <span className="absolute top-1 left-1 bg-slate-900/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          {index === 0 ? 'Main / Thumbnail' : `Gallery #${index + 1}`}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-1 mt-1.5 pt-1 border-t border-slate-100 text-[10px]">
+                        <label className="cursor-pointer text-emerald-700 font-bold hover:underline">
+                          Replace
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (evt) => {
+                                  const result = evt.target?.result as string;
+                                  if (result) {
+                                    setFormData(prev => {
+                                      const updated = [...prev.images];
+                                      updated[index] = result;
+                                      return { ...prev, images: updated };
+                                    });
+                                  }
+                                };
+                                reader.readAsDataURL(file as Blob);
+                              }
+                            }}
+                          />
+                        </label>
+
+                        {formData.images.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                images: prev.images.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            className="text-rose-600 font-bold hover:underline"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* File Upload / Image URL Input Controls */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="Paste Image URL (https://...)"
+                      value={formData.newImageUrlInput}
+                      onChange={(e) => setFormData({ ...formData, newImageUrlInput: e.target.value })}
+                      className="flex-1 bg-white text-gray-900 placeholder:text-gray-500 caret-green-600 border border-gray-300 p-2 rounded-xl text-xs focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formData.newImageUrlInput.trim()) {
+                          setFormData(prev => ({
+                            ...prev,
+                            images: [...prev.images, prev.newImageUrlInput.trim()],
+                            newImageUrlInput: ''
+                          }));
+                        }
+                      }}
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs transition shrink-0"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold py-2 px-3 rounded-xl cursor-pointer text-center transition flex items-center justify-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Upload Local Image File(s)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            Array.from(files).forEach(file => {
+                              const reader = new FileReader();
+                              reader.onload = (evt) => {
+                                const result = evt.target?.result as string;
+                                if (result) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    images: [...prev.images, result]
+                                  }));
+                                }
+                              };
+                              reader.readAsDataURL(file as Blob);
+                            });
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               <button
                 type="submit"
-                className="w-full bg-emerald-800 text-white font-bold py-3 rounded-xl mt-3 shadow-lg"
+                className="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl mt-3 shadow-lg transition"
               >
                 Save Product
               </button>

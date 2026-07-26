@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { formatINR } from '../utils/formatters';
+import { getValidProductImage, handleImageError } from '../utils/imageUtils';
 import { Product, PaymentMethod, Customer } from '../types/store';
 import { 
   Calculator, Scan, Search, Plus, Minus, Trash2, 
@@ -196,9 +197,10 @@ export const POSBillingView: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <img
-                      src={p.images[0]}
+                      src={getValidProductImage(p.images[0], p.category)}
                       alt={p.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => handleImageError(e, p.category)}
                       className="w-10 h-10 object-contain rounded-lg bg-slate-50 p-1 shrink-0"
                     />
                     <div className="min-w-0">

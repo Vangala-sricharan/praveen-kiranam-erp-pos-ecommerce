@@ -33,7 +33,7 @@ export const HeroBanner: React.FC = () => {
             </h1>
 
             <p className="text-xs sm:text-sm text-emerald-100/90 max-w-xl font-normal leading-relaxed">
-              Order fresh Aashirvaad Atta, Sonamasuri Rice, Freedom Sunflower Oil, Pure Amul Ghee, Fresh Dairy, and Household necessities directly from Hyderabad's favorite neighborhood kiranam store.
+              Order fresh Aashirvaad Atta, Sonamasuri Rice, Freedom Sunflower Oil, Pure Amul Ghee, Fresh Dairy, and Household necessities directly from Manakondur's trusted neighborhood kiranam store.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -96,7 +96,7 @@ export const HeroBanner: React.FC = () => {
           </div>
           <div>
             <h4 className="text-xs font-bold text-slate-900">15-Min Express Delivery</h4>
-            <p className="text-[11px] text-slate-500">Pragathi Nagar, Kukatpally & Nizampet</p>
+            <p className="text-[11px] text-slate-500">Manakondur & Karimnagar</p>
           </div>
         </div>
 

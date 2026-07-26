@@ -37,21 +37,23 @@ export const CustomerStaticPagesModal: React.FC = () => {
               <Store className="w-6 h-6 text-emerald-400" />
               <div>
                 <h2 className="text-lg font-bold text-white">About Praveen Kiranam & General Stores</h2>
-                <p className="text-xs text-slate-400">Serving Pragathi Nagar & Hyderabad Families Since 1998</p>
+                <div className="inline-flex items-center gap-1.5 bg-emerald-950 border border-emerald-800 text-emerald-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full mt-1">
+                  <span>🏪 Serving Manakondur Since 2001</span>
+                </div>
               </div>
             </div>
 
             <div className="text-xs leading-relaxed text-slate-300 space-y-3">
               <p>
-                Founded by <strong>Praveen Kumar Vangala</strong> in 1998, Praveen Kiranam and General Stores has grown from a humble neighborhood corner store into a full-fledged hybrid Supermarket & E-commerce destination in Telangana.
+                Established in 2001, Praveen Kiranam & General Stores has proudly served the families of Manakondur and nearby areas with quality groceries, household essentials and daily needs.
               </p>
               <p>
-                We specialize in direct farm-procured <strong>Aged Sonamasuri Raw Rice</strong>, premium unpolished <strong>Desi Toor Dal</strong>, <strong>Aashirvaad Atta</strong>, <strong>Freedom Sunflower Oils</strong>, and fresh daily dairy.
+                Our mission is to provide fresh products, fair prices and reliable service while bringing modern shopping convenience to our local community.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg">
-                  <div className="font-bold text-emerald-400">⚡ 30-Min Delivery</div>
-                  <div className="text-[11px] text-slate-400">Express home delivery in Pragathi Nagar & Kukatpally.</div>
+                  <div className="font-bold text-emerald-400">⚡ 15-Min Express Delivery</div>
+                  <div className="text-[11px] text-slate-400">Serving Manakondur & Karimnagar.</div>
                 </div>
                 <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg">
                   <div className="font-bold text-emerald-400">🧾 GST Tax Compliant</div>
@@ -78,16 +80,22 @@ export const CustomerStaticPagesModal: React.FC = () => {
                 <div className="flex items-start gap-2.5">
                   <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-bold text-white">{STORE_DETAILS.name}</div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">{STORE_DETAILS.address}</div>
+                    <div className="font-bold text-white">PRAVEEN KIRANAM & GENERAL STORES</div>
+                    <div className="text-slate-300 text-[11px] mt-1 whitespace-pre-line font-medium">
+                      📍 Address{"\n"}
+                      Manakondur,{"\n"}
+                      Karimnagar,{"\n"}
+                      Telangana - 505469{"\n"}
+                      India
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
                   <div>
-                    <div className="font-bold text-white">Phone / WhatsApp</div>
-                    <div className="text-slate-400">{STORE_DETAILS.phone}</div>
+                    <div className="font-bold text-white">Phone / Call</div>
+                    <a href={`tel:${STORE_DETAILS.phone}`} className="text-emerald-400 hover:underline">{STORE_DETAILS.phone}</a>
                   </div>
                 </div>
 
@@ -97,6 +105,38 @@ export const CustomerStaticPagesModal: React.FC = () => {
                     <div className="font-bold text-white">Working Hours</div>
                     <div className="text-slate-400">{STORE_DETAILS.openingHours}</div>
                   </div>
+                </div>
+
+                {/* Google Map */}
+                <div className="h-40 rounded-lg overflow-hidden border border-slate-700 mt-2">
+                  <iframe
+                    title="Praveen Kiranam Contact Map"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    src="https://maps.google.com/maps?q=18.397500,79.187528&z=16&output=embed"
+                  ></iframe>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=18.397500,79.187528"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-center text-[11px]"
+                  >
+                    Open Google Maps Navigation
+                  </a>
+                  <a
+                    href={`https://wa.me/919849012345?text=Hello%20Praveen%20Kiranam,%20I%20want%20to%20order%20groceries`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 bg-emerald-900 hover:bg-emerald-800 text-amber-300 font-bold py-2 rounded-lg text-center text-[11px] border border-emerald-700"
+                  >
+                    WhatsApp Store
+                  </a>
                 </div>
               </div>
 

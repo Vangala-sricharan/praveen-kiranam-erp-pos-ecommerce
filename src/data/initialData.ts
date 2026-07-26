@@ -4,22 +4,34 @@
 import { Product, Category, Brand, Supplier, Coupon, Customer, Expense } from '../types/store';
 
 export const STORE_DETAILS = {
-  name: "PRAVEEN KIRANAM AND GENERAL STORES",
-  tagline: "Your Trusted Neighborhood Kiranam & Supermarket Since 1998",
+  name: "PRAVEEN KIRANAM & GENERAL STORES",
+  tagline: "Serving Manakondur Since 2001",
+  heritageBadge: "🟢 Serving Manakondur Since 2001",
   owner: "Praveen Kumar Vangala",
   phone: "+91 98490 12345",
-  altPhone: "+91 040 2345 6789",
+  altPhone: "+91 0878 2345678",
   email: "orders@praveenkiranam.com",
-  gstin: "36ABCDE1234F1Z5", // Telangana GSTIN
-  fssaiNo: "13621011000123",
-  address: "H.No 4-12/1, Main Road, Pragathi Nagar, Hyderabad, Telangana - 500090",
-  googleMapsUrl: "https://maps.google.com/?q=Pragathi+Nagar+Hyderabad",
+  gstin: "36ABCDE1234F1Z5", // Telangana GSTIN preserved
+  fssaiNo: "13621011000123", // FSSAI preserved
+  address: "Manakondur, Karimnagar, Telangana - 505469, India",
+  googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=18.397500,79.187528",
+  latitude: 18.397500,
+  longitude: 79.187528,
   openingHours: "Mon - Sun: 6:00 AM - 10:00 PM",
-  deliveryAreas: ["Pragathi Nagar", "Kukatpally", "Nizampet", "Bachupally", "JNTU", "Miyapur"],
+  deliveryAreas: ["Manakondur", "Karimnagar"],
   expressDeliveryMin: 15,
 };
 
 export const INITIAL_CATEGORIES: Category[] = [
+  {
+    id: "cat_testing",
+    name: "Testing",
+    teluguName: "టెస్టింగ్ (₹1)",
+    iconName: "Zap",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80",
+    description: "₹1 Test Product for quick testing of UPI payment flow",
+    itemCount: 1
+  },
   {
     id: "cat_atta_rice",
     name: "Atta, Rice & Grains",
@@ -175,6 +187,38 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
 ];
 
 export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: "prod_test_product",
+    name: "Test Product",
+    teluguName: "టెస్ట్ ప్రోడక్ట్ (₹1)",
+    category: "Testing",
+    subCategory: "UPI Test",
+    brand: "Praveen Kiranam",
+    description: "₹1 Test Product for quick testing of the Smart UPI payment flow.",
+    hsnCode: "9999",
+    gstRate: 0,
+    selectedVariantId: "var_test_1",
+    weightVariants: [
+      {
+        variantId: "var_test_1",
+        weight: 1,
+        unit: "pc",
+        mrp: 1,
+        sellingPrice: 1,
+        stock: 100,
+        sku: "PK-TEST-001",
+        barcode: "8900000000001"
+      }
+    ],
+    images: ["https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"],
+    isFeatured: true,
+    isBestSeller: false,
+    isTodayDeal: true,
+    dealDiscountPercent: 0,
+    status: "active",
+    rating: 5.0,
+    reviewsCount: 10
+  },
   {
     id: "prod_atta_aashirvaad",
     name: "Aashirvaad Whole Wheat Shuddh Atta",

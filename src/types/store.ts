@@ -80,9 +80,11 @@ export interface CartItem {
 
 export type OrderCustomerType = 'online' | 'walkin' | 'phone';
 export type PaymentMethod = 'upi' | 'cash' | 'card' | 'store_credit';
-export type PaymentStatus = 'paid' | 'pending' | 'partially_paid' | 'failed';
+export type PaymentStatus = 'paid' | 'verified' | 'pending' | 'pending_verification' | 'partially_paid' | 'failed' | 'rejected';
 export type OrderStatus = 
   | 'placed' 
+  | 'pending_verification'
+  | 'payment_rejected'
   | 'accepted' 
   | 'preparing' 
   | 'packed' 

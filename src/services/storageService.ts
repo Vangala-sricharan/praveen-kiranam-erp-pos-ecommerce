@@ -115,9 +115,6 @@ class StorageService {
     if (!localStorage.getItem(STORAGE_KEYS.CUSTOMER_ACCOUNTS)) {
       setLocalItem(STORAGE_KEYS.CUSTOMER_ACCOUNTS, INITIAL_CUSTOMER_ACCOUNTS);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER)) {
-      setLocalItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER, INITIAL_CUSTOMER_ACCOUNTS[0]);
-    }
     if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
       // Seed an initial past order
       const initialOrders: Order[] = [
@@ -425,6 +422,30 @@ class StorageService {
       order.orderStatus = status;
       this.saveOrders(orders);
     }
+  }
+
+  approvePayment(orderId: string): Order | null {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.paymentStatus = 'verified';
+      order.orderStatus = 'preparing';
+      this.saveOrders(orders);
+      return order;
+    }
+    return null;
+  }
+
+  rejectPayment(orderId: string): Order | null {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      order.paymentStatus = 'rejected';
+      order.orderStatus = 'payment_rejected';
+      this.saveOrders(orders);
+      return order;
+    }
+    return null;
   }
 
   // --- COUPONS ---
@@ -890,11 +911,15 @@ class StorageService {
   }
 
   getCurrentCustomerUser(): CustomerAccount | null {
-    return getLocalItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER, INITIAL_CUSTOMER_ACCOUNTS[0] || null);
+    return getLocalItem<CustomerAccount | null>(STORAGE_KEYS.CURRENT_CUSTOMER_USER, null);
   }
 
   setCurrentCustomerUser(user: CustomerAccount | null): void {
-    setLocalItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER, user);
+    if (user) {
+      setLocalItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER, user);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_CUSTOMER_USER);
+    }
   }
 
   registerCustomerAccount(data: { name: string; email: string; phone: string; password: string }): { success: boolean; message: string; customer?: CustomerAccount } {

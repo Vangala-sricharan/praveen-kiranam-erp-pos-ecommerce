@@ -6,6 +6,7 @@ import {
   Tag, ArrowRight, Plus, Minus, MessageSquare, Send, Zap 
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import { getValidProductImage, handleImageError } from '../utils/imageUtils';
 
 export const ProductDetailModal: React.FC = () => {
   const { 
@@ -90,8 +91,9 @@ export const ProductDetailModal: React.FC = () => {
                 className="relative aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center cursor-zoom-in group"
               >
                 <img 
-                  src={product.images[activeImageIdx] || product.images[0]} 
+                  src={getValidProductImage(product.images[activeImageIdx] || product.images[0], product.category)} 
                   alt={product.name} 
+                  onError={(e) => handleImageError(e, product.category)}
                   className={`w-full h-full object-cover transition-transform duration-300 ${zoomImage ? 'scale-150' : 'group-hover:scale-105'}`}
                 />
                 <div className="absolute top-2 right-2 bg-slate-900/80 px-2 py-1 rounded text-[10px] font-bold text-slate-300 border border-slate-700">
@@ -110,7 +112,12 @@ export const ProductDetailModal: React.FC = () => {
                         activeImageIdx === idx ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-800 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img 
+                        src={getValidProductImage(img, product.category)} 
+                        alt="" 
+                        onError={(e) => handleImageError(e, product.category)}
+                        className="w-full h-full object-cover" 
+                      />
                     </button>
                   ))}
                 </div>

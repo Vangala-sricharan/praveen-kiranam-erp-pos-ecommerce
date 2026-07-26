@@ -37,11 +37,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenWishlist, onOp
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
-              High Density Kiranam System
+              🟢 Serving Manakondur Since 2001
             </span>
             <span className="flex items-center gap-1.5 font-medium text-emerald-200">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              Express 15-Min Delivery in {STORE_DETAILS.deliveryAreas.slice(0, 3).join(', ')}
+              🚚 Express 15-Min Delivery Across Manakondur & Karimnagar
             </span>
           </div>
 
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenWishlist, onOp
               <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                 <span>& GENERAL STORES</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span className="text-amber-400 font-mono">HYD-36</span>
+                <span className="text-amber-400 font-semibold text-[10px] lowercase capitalize">Manakondur</span>
               </div>
             </div>
           </div>

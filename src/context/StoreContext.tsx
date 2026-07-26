@@ -164,6 +164,8 @@ interface StoreContextType {
   addReview: (review: Omit<import('../types/store').Review, 'id' | 'date'>) => void;
   markNotificationRead: (id: string) => void;
   updateOrderStatus: (orderId: string, status: Order['orderStatus']) => void;
+  approvePayment: (orderId: string) => Order | null;
+  rejectPayment: (orderId: string) => Order | null;
   placeOnlineOrder: (customerData: {
     name: string;
     phone: string;
@@ -180,18 +182,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [viewMode, setViewMode] = useState<AppViewMode>('online_store');
   const [adminTab, setAdminTab] = useState<AdminTab>('dashboard');
 
-  // Auth & RBAC
-  const [authUser, setAuthUser] = useState<import('../types/store').AuthUser | null>({
-    id: "emp_101",
-    name: "Praveen Kumar Vangala",
-    email: "admin@praveenkiranam.com",
-    role: "super_admin",
-    employeeId: "PK-EMP-101"
-  });
+  // Auth & RBAC (Starts logged out)
+  const [authUser, setAuthUser] = useState<import('../types/store').AuthUser | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
-  // Customer Auth State
-  const [customerUser, setCustomerUser] = useState<import('../types/store').CustomerAccount | null>(storageService.getCurrentCustomerUser());
+  // Customer Auth State (Starts logged out in Guest mode)
+  const [customerUser, setCustomerUser] = useState<import('../types/store').CustomerAccount | null>(null);
   const [isCustomerAuthModalOpen, setIsCustomerAuthModalOpen] = useState<boolean>(false);
   const [customerAuthMode, setCustomerAuthMode] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
 
@@ -608,8 +604,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       couponCode: appliedCoupon?.code,
       grandTotal: cartGrandTotal,
       paymentMethod: customerData.paymentMethod,
-      paymentStatus: customerData.paymentMethod === 'cod' as any ? 'pending' : 'paid',
-      orderStatus: 'placed',
+      paymentStatus: customerData.paymentMethod === 'upi' ? 'pending_verification' : (customerData.paymentMethod === 'cash' ? 'pending' : 'paid'),
+      orderStatus: customerData.paymentMethod === 'upi' ? 'pending_verification' : 'placed',
       notes: customerData.notes,
       createdBy: 'customer'
     });
@@ -776,6 +772,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     refreshData();
   };
 
+  const approvePayment = (orderId: string) => {
+    const updated = storageService.approvePayment(orderId);
+    if (updated) {
+      showToast(`Payment Approved for Order #${updated.orderNumber}! Status moved to Preparing.`, 'success');
+      refreshData();
+    }
+    return updated;
+  };
+
+  const rejectPayment = (orderId: string) => {
+    const updated = storageService.rejectPayment(orderId);
+    if (updated) {
+      showToast(`Payment Rejected for Order #${updated.orderNumber}.`, 'error');
+      refreshData();
+    }
+    return updated;
+  };
+
   return (
     <StoreContext.Provider value={{
       viewMode, setViewMode,
@@ -811,7 +825,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addSavedAddress, deleteSavedAddress,
       addStockAdjustment, createPurchaseOrder, receivePurchaseOrder,
       addReview, markNotificationRead,
-      updateOrderStatus, placeOnlineOrder
+      updateOrderStatus, approvePayment, rejectPayment, placeOnlineOrder
     }}>
       {children}
     </StoreContext.Provider>
